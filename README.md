@@ -9,12 +9,23 @@ files exactly as they already are, and the app only reads and writes those files
 
 ## Install
 
-Grab a build from [Releases](../../releases): `envhub-macos-arm64.tar.gz` (untar, drop
-`envhub.app` in `/Applications`) or `envhub-linux-x86_64.tar.gz` (untar, put `envhub`
-somewhere on your `PATH`). The macOS build is signed ad-hoc but not notarized. Extract it with `tar`, not by
-double-clicking a zip — unzipping marks the bundle as quarantined and macOS then claims the
-app is damaged. If you hit that anyway, clear the flag:
-`xattr -dr com.apple.quarantine /Applications/envhub.app`.
+envhub is not notarized, so macOS quarantines it however you download it and refuses to
+open it ("damaged"). The install script fetches the latest release, puts it in
+`/Applications` and clears that flag:
+
+```sh
+./tools/install-release.sh          # needs the gh CLI, since the repo is private
+```
+
+Or do it by hand: download `envhub-macos-arm64.tar.gz` from
+[Releases](../../releases), then
+
+```sh
+tar -xzf envhub-macos-arm64.tar.gz -C /Applications
+xattr -dr com.apple.quarantine /Applications/envhub.app
+```
+
+On Linux, `envhub-linux-x86_64.tar.gz` holds a single binary — untar it onto your `PATH`.
 
 Or build it yourself. Requires Rust, and macOS for the app bundle.
 
