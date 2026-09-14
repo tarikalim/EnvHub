@@ -1,4 +1,4 @@
-# envhub
+# EnvHub
 
 A small desktop app that finds every `KEY=VALUE` in the `.env` files scattered across your
 machine, so you can search them, copy one to the clipboard, and edit it in place — without
