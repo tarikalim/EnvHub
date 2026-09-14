@@ -1,0 +1,11 @@
+# envhub config — copy to ~/.config/envhub/config
+# One directive per line.
+
+# Directories to scan. Defaults to $HOME when none are listed.
+# ~/code
+# ~/work
+
+# Directory names to skip, on top of the built-in list
+# (Library, node_modules, .git, target, .venv, .cache, …).
+# !.gemini
+# !dist

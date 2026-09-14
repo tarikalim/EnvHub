@@ -1,0 +1,15 @@
+[package]
+name = "envhub"
+version = "0.1.0"
+edition = "2024"
+description = "Search, copy and edit the KEY=VALUE pairs in every .env file on your machine"
+license = "MIT"
+
+[dependencies]
+eframe = { version = "0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "wayland", "x11"] }
+ignore = "0.4.33"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
