@@ -30,6 +30,8 @@ you an app you can launch from Spotlight.
 
 - Type in the search box to filter by key or repo; terms are ANDed (`forge oauth`).
 - Click a key or a value to copy the value. `copy` does the same; `open` opens the file in `$EDITOR`.
+- Above the results there is a second box that narrows whatever is currently listed — handy
+  when a single service has a hundred keys. It clears itself when you switch repos.
 - The left panel lists every directory that has env files, with key counts. Click one to
   scope the list to it, or `all repos` to search everything.
 - `reveal values` unmasks values; `search values` also searches inside them.

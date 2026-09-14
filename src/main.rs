@@ -215,6 +215,7 @@ struct App {
     cfg: Config,
     entries: Vec<Entry>,
     query: String,
+    filter: String, // narrows the list currently on screen
     repo: Option<String>,
     search_values: bool,
     reveal: bool,
@@ -236,6 +237,7 @@ impl App {
             entries: scan(&cfg),
             cfg,
             query: String::new(),
+            filter: String::new(),
             repo: None,
             search_values: false,
             reveal: false,
@@ -278,7 +280,12 @@ impl App {
 impl eframe::App for App {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = &ui.ctx().clone();
-        let terms: Vec<String> = self.query.split_whitespace().map(|t| t.to_lowercase()).collect();
+        let terms: Vec<String> = self
+            .query
+            .split_whitespace()
+            .chain(self.filter.split_whitespace())
+            .map(|t| t.to_lowercase())
+            .collect();
         let visible: Vec<usize> = (0..self.entries.len())
             .filter(|&i| {
                 let e = &self.entries[i];
@@ -344,23 +351,39 @@ impl eframe::App for App {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 if ui.selectable_label(self.repo.is_none(), format!("all repos  ({})", self.entries.len())).clicked() {
                     self.repo = None;
+                    self.filter.clear();
                 }
                 ui.separator();
                 for (r, n) in repos {
                     let label = format!("{}  ({})", r, n);
                     if ui.selectable_label(self.repo.as_deref() == Some(r.as_str()), label).clicked() {
                         self.repo = Some(r.clone());
+                        self.filter.clear();
                     }
                 }
             });
         });
 
         egui::CentralPanel::default().show(ui, |ui| {
-            ui.label(egui::RichText::new(format!(
-                "{} results — click to copy{}",
-                visible.len(),
-                if self.edit_mode { ", click value to edit" } else { "" }
-            )).weak());
+            ui.horizontal(|ui| {
+                let hint = match &self.repo {
+                    Some(r) => format!("filter in {r}…"),
+                    None => "filter these results…".to_string(),
+                };
+                ui.add(
+                    egui::TextEdit::singleline(&mut self.filter)
+                        .hint_text(hint)
+                        .desired_width(280.0),
+                );
+                if !self.filter.is_empty() && ui.small_button("clear").clicked() {
+                    self.filter.clear();
+                }
+                ui.label(egui::RichText::new(format!(
+                    "{} results — click to copy{}",
+                    visible.len(),
+                    if self.edit_mode { ", click value to edit" } else { "" }
+                )).weak());
+            });
             ui.separator();
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for i in visible {
