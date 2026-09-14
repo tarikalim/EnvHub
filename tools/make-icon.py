@@ -27,7 +27,7 @@ def pixels(s):
 def chunk(tag, data):
     return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data))
 
-here = pathlib.Path(__file__).parent
+here = pathlib.Path(__file__).resolve().parent.parent / "assets"
 big = pixels(1024)
 png = (b"\x89PNG\r\n\x1a\n"
        + chunk(b"IHDR", struct.pack(">IIBBBBB", 1024, 1024, 8, 6, 0, 0, 0))

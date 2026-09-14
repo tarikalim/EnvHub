@@ -8,6 +8,6 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 # ponytail: real copy, not a symlink — macOS ignores the bundle icon if the
 # executable resolves outside the bundle
 cp -f target/release/envhub "$APP/Contents/MacOS/envhub"
-cp -f tools/envhub.icns "$APP/Contents/Resources/envhub.icns"
+cp -f assets/envhub.icns "$APP/Contents/Resources/envhub.icns"
 touch "$APP"
 echo "installed: $APP"

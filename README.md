@@ -7,7 +7,7 @@ opening ten repos to find the one secret someone just asked you for.
 Built for local development convenience, not for security: values are stored in your `.env`
 files exactly as they already are, and the app only reads and writes those files.
 
-![key icon](tools/icon.png)
+![key icon](assets/icon.png)
 
 ## Install
 
@@ -52,6 +52,19 @@ you an app you can launch from Spotlight.
 ```
 
 See `example.env`. `↻ rescan` reloads the config and rescans.
+
+## Layout
+
+```
+src/main.rs     window setup
+src/app.rs      the egui interface
+src/config.rs   search roots and skip lists
+src/store.rs    parsing, scanning and writing .env files
+tools/          icon generator, macOS install script
+```
+
+`cargo test` covers the parsing, the config and the write path; `cargo clippy --all-targets`
+and `cargo fmt --check` run in CI.
 
 ## Shell alternative
 
