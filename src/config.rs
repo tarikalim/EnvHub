@@ -1,5 +1,6 @@
 //! Search roots and skip lists, read from `~/.config/envhub/.env`.
 
+use std::io;
 use std::path::{Path, PathBuf};
 
 // Noise that is never worth walking into.
@@ -37,6 +38,18 @@ pub fn config_file() -> PathBuf {
     config_dir().join(".env")
 }
 
+/// Written to [`config_file`] on first run so there is something to edit.
+const TEMPLATE: &str = include_str!("../example.env");
+
+pub fn write_template_if_missing() -> io::Result<PathBuf> {
+    let path = config_file();
+    if !path.exists() {
+        std::fs::create_dir_all(config_dir())?;
+        std::fs::write(&path, TEMPLATE)?;
+    }
+    Ok(path)
+}
+
 pub const ROOTS_KEY: &str = "ENVHUB_ROOTS";
 pub const SKIP_KEY: &str = "ENVHUB_SKIP";
 
@@ -58,6 +71,7 @@ pub struct Config {
 impl Config {
     /// Falls back to the defaults when the file is missing or unreadable.
     pub fn load() -> Self {
+        let _ = write_template_if_missing();
         let mut cfg = std::fs::read_to_string(config_file())
             .map(|text| Self::parse(&text))
             .unwrap_or_default();

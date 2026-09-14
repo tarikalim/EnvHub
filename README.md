@@ -50,8 +50,9 @@ ENVHUB_ROOTS=~/code:~/work/backend   # folders to search; unset means $HOME
 ENVHUB_SKIP=dist:backup              # extra folder names to ignore
 ```
 
-Both are optional and `:`-separated like `PATH`; see `example.env`. `↻ rescan` reloads the
-file and scans again.
+Both are optional and `:`-separated like `PATH`. envhub writes this file, commented out and
+ready to edit, the first time it runs; the `config` button in the toolbar opens it in
+`$EDITOR`, and `↻ rescan` reloads it.
 
 ## Layout
 

@@ -122,12 +122,21 @@ impl App {
         }
     }
 
+    fn open_config(&mut self) {
+        match config::write_template_if_missing() {
+            Ok(path) => self.open_path(&path),
+            Err(err) => self.status = format!("could not create the config file: {err}"),
+        }
+    }
+
     fn open_in_editor(&mut self, index: usize) {
+        let path = self.entries[index].file.clone();
+        self.open_path(&path);
+    }
+
+    fn open_path(&mut self, path: &std::path::Path) {
         let editor = std::env::var("EDITOR").unwrap_or_else(|_| "open".to_owned());
-        if let Err(err) = std::process::Command::new(&editor)
-            .arg(&self.entries[index].file)
-            .spawn()
-        {
+        if let Err(err) = std::process::Command::new(&editor).arg(path).spawn() {
             self.status = format!("could not run {editor}: {err}");
         }
     }
@@ -159,6 +168,13 @@ impl App {
             }
             if ui.button("↻ rescan").clicked() {
                 self.rescan();
+            }
+            if ui
+                .button("config")
+                .on_hover_text(config::config_file().display().to_string())
+                .clicked()
+            {
+                self.open_config();
             }
             ui.label(RichText::new(&self.status).weak());
         });
