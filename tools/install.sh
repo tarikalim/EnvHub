@@ -2,7 +2,7 @@
 # Builds envhub and installs it into ~/Applications/envhub.app
 set -e
 cd "$(dirname "$0")/.."
-APP="$HOME/Applications/envhub.app"
+APP="${1:-$HOME/Applications/envhub.app}"
 cargo build --release
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 # ponytail: real copy, not a symlink — macOS ignores the bundle icon if the

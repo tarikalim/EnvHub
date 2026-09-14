@@ -11,7 +11,11 @@ files exactly as they already are, and the app only reads and writes those files
 
 ## Install
 
-Requires Rust and, for the macOS app bundle, macOS.
+Grab a build from [Releases](../../releases): `envhub-macos-arm64.zip` (unzip, drop
+`envhub.app` in `/Applications`) or `envhub-linux-x86_64.tar.gz` (untar, put `envhub`
+somewhere on your `PATH`). macOS will warn that the app is unsigned — right-click → Open.
+
+Or build it yourself. Requires Rust, and macOS for the app bundle.
 
 ```sh
 git clone <this repo> && cd envhub
