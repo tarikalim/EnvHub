@@ -7,8 +7,6 @@ opening ten repos to find the one secret someone just asked you for.
 Built for local development convenience, not for security: values are stored in your `.env`
 files exactly as they already are, and the app only reads and writes those files.
 
-![key icon](assets/icon.png)
-
 ## Install
 
 Grab a build from [Releases](../../releases): `envhub-macos-arm64.zip` (unzip, drop
