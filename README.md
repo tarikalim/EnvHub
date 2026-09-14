@@ -51,7 +51,7 @@ you an app you can launch from Spotlight.
 !dist           # a directory name to skip, on top of the built-in list
 ```
 
-See `config.example`. `↻ rescan` reloads the config and rescans.
+See `example.env`. `↻ rescan` reloads the config and rescans.
 
 ## Shell alternative
 
