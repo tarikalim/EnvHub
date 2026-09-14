@@ -1,4 +1,4 @@
-//! Search roots and skip lists, read from `~/.config/envhub/config`.
+//! Search roots and skip lists, read from `~/.config/envhub/.env`.
 
 use std::path::{Path, PathBuf};
 
@@ -34,8 +34,11 @@ pub fn config_dir() -> PathBuf {
 }
 
 pub fn config_file() -> PathBuf {
-    config_dir().join("config")
+    config_dir().join(".env")
 }
+
+pub const ROOTS_KEY: &str = "ENVHUB_ROOTS";
+pub const SKIP_KEY: &str = "ENVHUB_SKIP";
 
 /// Holds keys that belong to no repo.
 pub fn scratch_file() -> PathBuf {
@@ -64,21 +67,26 @@ impl Config {
         cfg
     }
 
-    /// One directive per line: a path to scan, or `!name` for a directory to skip.
+    /// Reads `ENVHUB_ROOTS` and `ENVHUB_SKIP` out of an env file. Both are
+    /// colon-separated, like `PATH`.
     pub fn parse(text: &str) -> Self {
         let mut cfg = Self::default();
         for line in text.lines() {
-            let line = line.trim();
-            if line.is_empty() || line.starts_with('#') {
+            let Some((key, value, false)) = crate::store::parse_line(line) else {
                 continue;
-            }
-            match line.strip_prefix('!') {
-                Some(skip) => cfg.skip.push(skip.trim().to_owned()),
-                None => cfg.roots.push(expand(line)),
+            };
+            match key.as_str() {
+                ROOTS_KEY => cfg.roots = split_list(&value).map(expand).collect(),
+                SKIP_KEY => cfg.skip = split_list(&value).map(str::to_owned).collect(),
+                _ => {}
             }
         }
         cfg
     }
+}
+
+fn split_list(value: &str) -> impl Iterator<Item = &str> {
+    value.split(':').map(str::trim).filter(|s| !s.is_empty())
 }
 
 pub fn is_skipped(dir_name: &str, extra: &[String]) -> bool {
@@ -107,22 +115,26 @@ mod tests {
 
     #[test]
     fn parses_roots_and_skips() {
-        let cfg = Config::parse("# comment\n~/code\n\n/tmp/x\n!dist\n  !  spaced  \n");
+        let cfg =
+            Config::parse("# comment\nENVHUB_ROOTS=~/code : /tmp/x\nENVHUB_SKIP=dist:backup\n");
         assert_eq!(
             cfg.roots,
             vec![home().join("code"), PathBuf::from("/tmp/x")]
         );
-        assert_eq!(cfg.skip, vec!["dist".to_owned(), "spaced".to_owned()]);
+        assert_eq!(cfg.skip, vec!["dist".to_owned(), "backup".to_owned()]);
     }
 
     #[test]
-    fn empty_config_is_default() {
-        assert_eq!(Config::parse("\n# nothing here\n"), Config::default());
+    fn ignores_comments_unknown_keys_and_empty_values() {
+        assert_eq!(
+            Config::parse("# ENVHUB_ROOTS=~/nope\nOTHER=x\nENVHUB_ROOTS=\n"),
+            Config::default()
+        );
     }
 
     #[test]
     fn skips_builtin_and_configured_names() {
-        let cfg = Config::parse("!dist");
+        let cfg = Config::parse("ENVHUB_SKIP=dist");
         assert!(is_skipped("node_modules", &cfg.skip));
         assert!(is_skipped("dist", &cfg.skip));
         assert!(!is_skipped("src", &cfg.skip));

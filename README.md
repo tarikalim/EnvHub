@@ -41,15 +41,15 @@ you an app you can launch from Spotlight.
 
 ## Config
 
-`~/.config/envhub/config` (or `$XDG_CONFIG_HOME/envhub/config`), one directive per line:
+`~/.config/envhub/.env` (or `$XDG_CONFIG_HOME/envhub/.env`) — an env file like any other:
 
-```
-~/code          # a directory to scan; defaults to $HOME when none are listed
-~/work
-!dist           # a directory name to skip, on top of the built-in list
+```sh
+ENVHUB_ROOTS=~/code:~/work/backend   # folders to search; unset means $HOME
+ENVHUB_SKIP=dist:backup              # extra folder names to ignore
 ```
 
-See `example.env`. `↻ rescan` reloads the config and rescans.
+Both are optional and `:`-separated like `PATH`; see `example.env`. `↻ rescan` reloads the
+file and scans again.
 
 ## Layout
 

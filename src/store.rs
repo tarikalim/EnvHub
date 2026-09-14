@@ -141,8 +141,10 @@ pub fn scan(cfg: &Config) -> Vec<Entry> {
                 continue;
             }
             let path = dir_entry.path();
-            if path == scratch {
-                continue; // read above, and it is not a repo
+            // envhub's own files: the scratch file is read above, the config
+            // file holds settings rather than someone's secrets.
+            if path == scratch || path == config::config_file() {
+                continue;
             }
             let repo = path.parent().map(config::display_path).unwrap_or_default();
             read_env_file(path, &repo, &mut entries);
