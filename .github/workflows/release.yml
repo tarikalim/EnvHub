@@ -13,7 +13,7 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            asset: envhub-macos-arm64.zip
+            asset: envhub-macos-arm64.tar.gz
           - os: ubuntu-latest
             asset: envhub-linux-x86_64.tar.gz
     runs-on: ${{ matrix.os }}
@@ -38,7 +38,9 @@ jobs:
           # downloaded app is quarantined, so it would report itself as damaged.
           codesign --force --deep --sign - dist/envhub.app
           codesign --verify --strict --verbose=2 dist/envhub.app
-          ditto -c -k --keepParent dist/envhub.app "${{ matrix.asset }}"
+          # tar, not zip: unzipping propagates the download's quarantine flag to
+          # the bundle, and an unnotarized app then reports itself as damaged.
+          tar -czf "${{ matrix.asset }}" -C dist envhub.app
 
       - name: Package (Linux binary)
         if: runner.os == 'Linux'

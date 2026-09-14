@@ -9,10 +9,11 @@ files exactly as they already are, and the app only reads and writes those files
 
 ## Install
 
-Grab a build from [Releases](../../releases): `envhub-macos-arm64.zip` (unzip, drop
+Grab a build from [Releases](../../releases): `envhub-macos-arm64.tar.gz` (untar, drop
 `envhub.app` in `/Applications`) or `envhub-linux-x86_64.tar.gz` (untar, put `envhub`
-somewhere on your `PATH`). The macOS build is signed ad-hoc but not notarized, so the first launch needs one of:
-right-click → Open, or, if macOS claims the app is damaged, clear the download flag with
+somewhere on your `PATH`). The macOS build is signed ad-hoc but not notarized. Extract it with `tar`, not by
+double-clicking a zip — unzipping marks the bundle as quarantined and macOS then claims the
+app is damaged. If you hit that anyway, clear the flag:
 `xattr -dr com.apple.quarantine /Applications/envhub.app`.
 
 Or build it yourself. Requires Rust, and macOS for the app bundle.
