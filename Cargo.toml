@@ -1,6 +1,6 @@
 [package]
 name = "envhub"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "Search, copy and edit the KEY=VALUE pairs in every .env file on your machine"
 license = "MIT"

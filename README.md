@@ -11,7 +11,9 @@ files exactly as they already are, and the app only reads and writes those files
 
 Grab a build from [Releases](../../releases): `envhub-macos-arm64.zip` (unzip, drop
 `envhub.app` in `/Applications`) or `envhub-linux-x86_64.tar.gz` (untar, put `envhub`
-somewhere on your `PATH`). macOS will warn that the app is unsigned — right-click → Open.
+somewhere on your `PATH`). The macOS build is signed ad-hoc but not notarized, so the first launch needs one of:
+right-click → Open, or, if macOS claims the app is damaged, clear the download flag with
+`xattr -dr com.apple.quarantine /Applications/envhub.app`.
 
 Or build it yourself. Requires Rust, and macOS for the app bundle.
 

@@ -34,6 +34,10 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           ./tools/install.sh dist/envhub.app
+          # Ad-hoc signature: arm64 refuses to launch a bundle with none, and a
+          # downloaded app is quarantined, so it would report itself as damaged.
+          codesign --force --deep --sign - dist/envhub.app
+          codesign --verify --strict --verbose=2 dist/envhub.app
           ditto -c -k --keepParent dist/envhub.app "${{ matrix.asset }}"
 
       - name: Package (Linux binary)
