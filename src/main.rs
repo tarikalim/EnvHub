@@ -17,13 +17,18 @@ struct Entry {
     value: String,
     hay: String, // lowercased "repo key", for search
     value_lc: String,
+    commented: bool,
 }
 
 impl Entry {
     fn new(repo: String, file: PathBuf, line: usize, key: String, value: String) -> Self {
+        Self::with_comment(repo, file, line, key, value, false)
+    }
+
+    fn with_comment(repo: String, file: PathBuf, line: usize, key: String, value: String, commented: bool) -> Self {
         let hay = format!("{repo} {key}").to_lowercase();
         let value_lc = value.to_lowercase();
-        Self { repo, file, line, key, value, hay, value_lc }
+        Self { repo, file, line, key, value, hay, value_lc, commented }
     }
 }
 
@@ -92,8 +97,8 @@ fn is_env_file(name: &str) -> bool {
 fn read_env_file(path: &Path, repo: String, out: &mut Vec<Entry>) {
     let Ok(text) = std::fs::read_to_string(path) else { return };
     for (i, raw) in text.lines().enumerate() {
-        let Some((k, v)) = parse_line(raw) else { continue };
-        out.push(Entry::new(repo.clone(), path.to_path_buf(), i, k, v));
+        let Some((k, v, commented)) = parse_line(raw) else { continue };
+        out.push(Entry::with_comment(repo.clone(), path.to_path_buf(), i, k, v, commented));
     }
 }
 
@@ -143,10 +148,12 @@ fn scan(cfg: &Config) -> Vec<Entry> {
     out
 }
 
-fn parse_line(raw: &str) -> Option<(String, String)> {
-    let line = raw.trim_start();
-    if line.starts_with('#') {
-        return None;
+/// Parses `KEY=VALUE`, including commented-out ones (`# KEY=VALUE`).
+fn parse_line(raw: &str) -> Option<(String, String, bool)> {
+    let mut line = raw.trim();
+    let commented = line.starts_with('#');
+    if commented {
+        line = line.trim_start_matches('#').trim();
     }
     let (k, v) = line.split_once('=')?;
     let k = k.trim_end();
@@ -155,14 +162,18 @@ fn parse_line(raw: &str) -> Option<(String, String)> {
     if !(first.is_ascii_alphabetic() || first == '_') || !chars.all(|c| c.is_ascii_alphanumeric() || c == '_') {
         return None;
     }
-    Some((k.to_string(), v.trim().to_string()))
+    Some((k.to_string(), v.trim().to_string(), commented))
 }
 
 /// Rewrites one KEY=VALUE line in place, leaving the rest of the file untouched.
 fn write_back(e: &Entry) -> std::io::Result<()> {
     let text = std::fs::read_to_string(&e.file)?;
     let mut lines: Vec<&str> = text.lines().collect();
-    let replaced = format!("{}={}", e.key, e.value);
+    let replaced = if e.commented {
+        format!("# {}={}", e.key, e.value)
+    } else {
+        format!("{}={}", e.key, e.value)
+    };
     if e.line >= lines.len() {
         return Ok(());
     }
@@ -208,6 +219,7 @@ struct App {
     search_values: bool,
     reveal: bool,
     edit_mode: bool,
+    show_commented: bool,
     toast: String,
     editing: Option<usize>,
     focus_edit: bool,
@@ -228,6 +240,7 @@ impl App {
             search_values: false,
             reveal: false,
             edit_mode: false,
+            show_commented: false,
             toast: String::new(),
             editing: None,
             focus_edit: false,
@@ -269,7 +282,9 @@ impl eframe::App for App {
         let visible: Vec<usize> = (0..self.entries.len())
             .filter(|&i| {
                 let e = &self.entries[i];
-                self.repo.as_ref().is_none_or(|r| &e.repo == r) && matches(e, &terms, self.search_values)
+                (self.show_commented || !e.commented)
+                    && self.repo.as_ref().is_none_or(|r| &e.repo == r)
+                    && matches(e, &terms, self.search_values)
             })
             .collect();
 
@@ -287,6 +302,8 @@ impl eframe::App for App {
                 }
                 ui.checkbox(&mut self.search_values, "search values");
                 ui.checkbox(&mut self.reveal, "reveal values");
+                ui.checkbox(&mut self.show_commented, "commented")
+                    .on_hover_text("also list keys that are commented out in the .env files");
                 if ui.checkbox(&mut self.edit_mode, "edit mode").changed() && !self.edit_mode {
                     self.editing = None;
                 }
@@ -349,11 +366,14 @@ impl eframe::App for App {
                 for i in visible {
                     ui.horizontal(|ui| {
                         let e = self.entries[i].clone();
+                        let label = if e.commented {
+                            egui::RichText::new(format!("# {}", e.key)).italics().weak()
+                        } else {
+                            egui::RichText::new(&e.key).strong()
+                        };
                         let key = ui.add_sized(
                             [260.0, 18.0],
-                            egui::Label::new(egui::RichText::new(&e.key).strong())
-                                .truncate()
-                                .sense(egui::Sense::click()),
+                            egui::Label::new(label).truncate().sense(egui::Sense::click()),
                         );
                         if key.on_hover_text(&e.key).clicked() {
                             self.copy(ctx, &e);
@@ -437,9 +457,11 @@ mod tests {
 
     #[test]
     fn parses_only_real_keys() {
-        assert_eq!(parse_line("FOO=bar"), Some(("FOO".into(), "bar".into())));
-        assert_eq!(parse_line("  A_1 = x y "), Some(("A_1".into(), "x y".into())));
-        assert_eq!(parse_line("# FOO=bar"), None);
+        assert_eq!(parse_line("FOO=bar"), Some(("FOO".into(), "bar".into(), false)));
+        assert_eq!(parse_line("  A_1 = x y "), Some(("A_1".into(), "x y".into(), false)));
+        assert_eq!(parse_line("# FOO=bar"), Some(("FOO".into(), "bar".into(), true)));
+        assert_eq!(parse_line("#FOO=bar"), Some(("FOO".into(), "bar".into(), true)));
+        assert_eq!(parse_line("# just a note"), None);
         assert_eq!(parse_line("1BAD=x"), None);
         assert_eq!(parse_line("no equals"), None);
     }
@@ -451,6 +473,16 @@ mod tests {
         let e = Entry::new("t".into(), f.clone(), 1, "A".into(), "9".into());
         write_back(&e).unwrap();
         assert_eq!(std::fs::read_to_string(&f).unwrap(), "# c\nA=9\nB=2\n");
+        std::fs::remove_file(f).unwrap();
+    }
+
+    #[test]
+    fn commented_line_stays_commented_when_saved() {
+        let f = std::env::temp_dir().join("envhub_commented.env");
+        std::fs::write(&f, "A=1\n# B=2\n").unwrap();
+        let e = Entry::with_comment("t".into(), f.clone(), 1, "B".into(), "9".into(), true);
+        write_back(&e).unwrap();
+        assert_eq!(std::fs::read_to_string(&f).unwrap(), "A=1\n# B=9\n");
         std::fs::remove_file(f).unwrap();
     }
 

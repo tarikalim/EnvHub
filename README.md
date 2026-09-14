@@ -29,6 +29,8 @@ you an app you can launch from Spotlight.
 - The left panel lists every directory that has env files, with key counts. Click one to
   scope the list to it, or `all repos` to search everything.
 - `reveal values` unmasks values; `search values` also searches inside them.
+- `commented` also lists the keys that are commented out in the files (`# KEY=VALUE`), shown
+  dimmed and prefixed with `#`. Editing one keeps it commented.
 - `edit mode` turns on inline editing: click a value, type, and click away — only that one
   line of the file is rewritten. Off by default so nothing is changed by accident.
 - `+ new` adds a key that belongs to no repo; it goes to `~/.config/envhub/scratch.env`.
